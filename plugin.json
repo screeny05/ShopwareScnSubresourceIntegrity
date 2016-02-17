@@ -1,0 +1,21 @@
+{
+    "label": {
+        "de": "SCN Subresource Integrity",
+        "en": "SCN Subresource Integrity"
+    },
+    "copyright": "(c) Sebastian Langer 2016",
+    "license": "proprietary",
+    "author": "Sebastian Langer <sl@scn.cx>",
+    "currentVersion": "1.0.0",
+    "changelogs": {
+        "de": {
+            "1.0.0": "Ursprüngliches Release"
+        },
+        "en": {
+            "1.0.0": "Initial release"
+        }
+    },
+    "compatibility": {
+        "minimumVersion": "5.0.0"
+    }
+}
