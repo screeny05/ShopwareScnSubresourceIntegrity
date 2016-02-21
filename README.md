@@ -4,8 +4,7 @@ Plugin for Shopware 5 providing [Subresource Integrity](https://developer.mozill
 **License**: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html) – [TLDRLegal](https://www.tldrlegal.com/l/agpl3)
 
 ## Restrictions
-* Only supports local resources, e.g. no CDN.
-* Only supports responsive theme.
+* Only supports responsive theme. (You can however still **use it manually**)
 
 ## Installation
 ```bash
@@ -21,6 +20,8 @@ This plugin provides an additional smarty-function which can be called via
 {$file = <path relative to docroot>}
 <script src="{$file}" integrity="{sri file=$file}"></script>
 ```
+
+The plugin is able to resolve absolute, relative and remote paths.
 
 #### Additional Parameters:
 Appart from the file-param you can provide the following:

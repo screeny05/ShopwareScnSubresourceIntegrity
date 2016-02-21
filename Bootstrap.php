@@ -100,9 +100,43 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         $view->addTemplateDir($this->Path() . 'Views');
     }
 
-    public static function getAbsolutePath($relativePath)
+    public static function getFileContent($path)
     {
-        return '/' . trim(Shopware()->DocPath(), '/') . '/' . trim($relativePath, '/');
+        $path = trim($path);
+
+        $isRemote = strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0;
+
+        if($isRemote){
+            return self::getRemoteFileContents($path);
+        }
+
+        $isAbsolute = strpos($path, '/') === 0;
+        $absolutePath = '/' . trim(Shopware()->DocPath(), '/') . '/';
+
+        if(!$isAbsolute){
+            $absolutePath .= trim(Shopware()->Front()->Request()->getPathInfo(), '/') . '/';
+        }
+
+        $absolutePath .= trim($path, '/');
+        return self::getLocalFileContents($absolutePath);
+    }
+
+    public static function getLocalFileContents($path)
+    {
+        return file_get_contents($path);
+    }
+
+    public static function getRemoteFileContents($url)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+
+        $data = curl_exec($ch);
+        curl_close($ch);
+
+        return $data;
     }
 
     public static function smartyFunctionSri($params, $smarty)
@@ -113,9 +147,7 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
             throw new Exception('assign: missing \'file\' parameter');
         }
 
-        $filepath = self::getAbsolutePath($params['file']);
-
-        $fileContents = file_get_contents($filepath);;
+        $fileContents = self::getFileContent($params['file']);
         if (!$fileContents) {
             throw new Exception('fs: file \'' . $filepath . '\' not found');
         }

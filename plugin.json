@@ -8,14 +8,16 @@
     "author": "Sebastian Langer <sl@scn.cx>",
     "support": "https://github.com/screeny05/sw5-scn-subresource-integrity/issues",
     "link": "https://github.com/screeny05/sw5-scn-subresource-integrity",
-    "currentVersion": "1.1.0",
+    "currentVersion": "1.2.0",
     "description": "<iframe src='https://screeny05.github.io/sw5-scn-subresource-integrity'>Plugin providing subresource integrity for resources.</iframe>",
     "changelogs": {
         "de": {
+            "1.2.0": "Unterstützung für entfernte resourcen hinzugefügt",
             "1.1.0": "Konfiguration hinzugefügt",
             "1.0.0": "Ursprüngliches Release"
         },
         "en": {
+            "1.2.0": "Add support for remote resources",
             "1.1.0": "Add configuration",
             "1.0.0": "Initial release"
         }
