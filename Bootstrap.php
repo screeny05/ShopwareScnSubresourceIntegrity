@@ -21,8 +21,8 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
             'version' => $json['currentVersion'],
             'label' => $json['label']['de'],
             'copyright' => $json['copyright'],
+            'license' => $json['license'],
             'author' => $json['author'],
-            'supplier' => $json['supplier'],
             'description' => $json['description'],
             'support' => $json['support'],
             'link' => $json['link']
@@ -41,7 +41,7 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
     public function install()
     {
         $this->registerEvents();
-        //$this->createConfiguration();
+        $this->createConfiguration();
 
         return array('success' => true, 'invalidateCache' => array('frontend', 'theme'));
     }
@@ -51,8 +51,34 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         return array('success' => true, 'invalidateCache' => array('frontend', 'theme'));
     }
 
+    public function update()
+    {
+        return true;
+    }
+
+    private function createConfiguration()
+    {
+        $form = $this->Form();
+
+        $form->setElement('checkbox', 'enableCss', array(
+            'label' => 'Enable SRI for CSS-Resources',
+            'value' => 1
+        ));
+
+        $form->setElement('checkbox', 'enableJs', array(
+            'label' => 'Enable SRI for JS-Resources',
+            'value' => 1
+        ));
+
+        $form->setElement('checkbox', 'activateCrossoriginAnonymous', array(
+            'label' => 'Set crossorign anonymous on JS-Resources',
+            'value' => 0
+        ));
+    }
+
     private function registerEvents()
     {
+        // Priority 401 ensures that our plugin gets added after initialization of smarty
         $this->subscribeEvent('Enlight_Controller_Action_Init', 'onActionInit', 401);
         $this->subscribeEvent('Enlight_Controller_Action_PostDispatchSecure_Frontend', 'onPostDispatchFrontend');
     }
@@ -63,7 +89,7 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         $view = $subject->View();
         $engine = $view->Engine();
         if (!isset($engine->smarty->registered_plugins['function']['sri'])) {
-            $engine->registerPlugin('function', 'sri', array(get_class($this), 'smarty_function_sri'));
+            $engine->registerPlugin('function', 'sri', array(get_class($this), 'smartyFunctionSri'));
         }
     }
 
@@ -74,28 +100,32 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         $view->addTemplateDir($this->Path() . 'Views');
     }
 
-    public static function smarty_function_sri($params, $smarty)
+    public static function getAbsolutePath($relativePath)
     {
-        $algo = 'sha384';
+        return '/' . trim(Shopware()->DocPath(), '/') . '/' . trim($relativePath, '/');
+    }
+
+    public static function smartyFunctionSri($params, $smarty)
+    {
+        $algorithm = 'sha384';
 
         if (empty($params['file'])) {
             throw new Exception('assign: missing \'file\' parameter');
-            return;
         }
 
-        $filepath = '/' . trim(Shopware()->DocPath(), '/') . '/' . trim($params['file'], '/');
+        $filepath = self::getAbsolutePath($params['file']);
 
         $fileContents = file_get_contents($filepath);;
         if (!$fileContents) {
             throw new Exception('fs: file \'' . $filepath . '\' not found');
         }
 
-        if (!empty($params['algo'])) {
-            $algo = $params['algo'];
+        if (!empty($params['algorithm'])) {
+            $algorithm = $params['algorithm'];
         }
 
-        $hash = hash($algo, $fileContents, true);
-        $sri = $algo . '-' . base64_encode($hash);
+        $hash = hash($algorithm, $fileContents, true);
+        $sri = $algorithm . '-' . base64_encode($hash);
 
         if (!empty($params['assign'])) {
             $smarty->assign($params['assign'], $sri);

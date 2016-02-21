@@ -1,6 +1,12 @@
 # sw5-scn-subresource-integrity
 Plugin for Shopware 5 providing [Subresource Integrity](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity) for resources.
 
+## Restrictions
+* Only supports local resources, e.g. no CDN.
+* Only supports responsive theme.
+
+**License**: [AGPLv3](https://www.gnu.org/licenses/agpl-3.0.html) – [TLDRLegal](https://www.tldrlegal.com/l/agpl3)
+
 ## Installation
 ```bash
 cd <instance>/engine/Shopware/Plugins/Community/Frontend
@@ -11,8 +17,9 @@ Then procede to install the plugin via backend and configure it to your likings.
 
 ## Usage
 This plugin provides an additional smarty-function which can be called via
-```
-{sri file=<path relative to docroot>}
+```smarty
+{$file = <path relative to docroot>}
+<script src="$file" integrity="{sri file=$file}"></script>
 ```
 
 #### Additional Parameters:
