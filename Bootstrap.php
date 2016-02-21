@@ -1,7 +1,20 @@
 <?php
 
+/**
+ * Class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap
+ *
+ * @package Shopware
+ * @subpackage Plugin
+ * @category Frontend
+ * @copyright Sebastian Langer
+ * @license AGPL-3.0
+ * @link https://github.com/screeny05/sw5-scn-subresource-integrity
+ */
 class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
+    /**
+     * @return array plugin-metadata
+     */
     private function getPluginJson()
     {
         $json = json_decode(file_get_contents(__DIR__ . '/plugin.json'), true);
@@ -13,6 +26,9 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         }
     }
 
+    /**
+     * @return array shopware-compatible plugin info
+     */
     public function getInfo()
     {
         $json = $this->getPluginJson();
@@ -29,6 +45,9 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         );
     }
 
+    /**
+     * @return array
+     */
     public function getCapabilities()
     {
         return array(
@@ -38,6 +57,9 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         );
     }
 
+    /**
+     * @return array cache-invalidation
+     */
     public function install()
     {
         $this->registerEvents();
@@ -46,16 +68,25 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         return array('success' => true, 'invalidateCache' => array('frontend', 'theme'));
     }
 
+    /**
+     * @return array cache-invalidation
+     */
     public function uninstall()
     {
         return array('success' => true, 'invalidateCache' => array('frontend', 'theme'));
     }
 
+    /**
+     * @return array cache-invalidation
+     */
     public function update()
     {
-        return true;
+        return array('success' => true, 'invalidateCache' => array('frontend', 'theme'));
     }
 
+    /**
+     * setup plugin configuration
+     */
     private function createConfiguration()
     {
         $form = $this->Form();
@@ -76,6 +107,9 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         ));
     }
 
+    /**
+     * registers public events
+     */
     private function registerEvents()
     {
         // Priority 401 ensures that our plugin gets added after initialization of smarty
@@ -83,16 +117,26 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         $this->subscribeEvent('Enlight_Controller_Action_PostDispatchSecure_Frontend', 'onPostDispatchFrontend');
     }
 
+    /**
+     * register smarty-function `sri`
+     * @param  Enlight_Event_EventArgs $args args
+     */
     public function onActionInit(Enlight_Event_EventArgs $args)
     {
         $subject = $args->getSubject();
         $view = $subject->View();
         $engine = $view->Engine();
+
+        // register only once
         if (!isset($engine->smarty->registered_plugins['function']['sri'])) {
             $engine->registerPlugin('function', 'sri', array(get_class($this), 'smartyFunctionSri'));
         }
     }
 
+    /**
+     * override shopware default template-files
+     * @param  Enlight_Event_EventArgs $args args
+     */
     public function onPostDispatchFrontend(Enlight_Event_EventArgs $args)
     {
         $subject = $args->getSubject();
@@ -100,20 +144,25 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         $view->addTemplateDir($this->Path() . 'Views');
     }
 
+    /**
+     * returns content of a file via a given path
+     * @param  string $path path/url to file
+     * @return string       file-contents
+     */
     public static function getFileContent($path)
     {
         $path = trim($path);
 
         $isRemote = strpos($path, 'http://') === 0 || strpos($path, 'https://') === 0;
 
-        if($isRemote){
+        if ($isRemote) {
             return self::getRemoteFileContents($path);
         }
 
         $isAbsolute = strpos($path, '/') === 0;
         $absolutePath = '/' . trim(Shopware()->DocPath(), '/') . '/';
 
-        if(!$isAbsolute){
+        if (!$isAbsolute) {
             $absolutePath .= trim(Shopware()->Front()->Request()->getPathInfo(), '/') . '/';
         }
 
@@ -121,11 +170,21 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         return self::getLocalFileContents($absolutePath);
     }
 
+    /**
+     * returns content of local files
+     * @param  string $path path to file
+     * @return string       file-contents
+     */
     public static function getLocalFileContents($path)
     {
         return file_get_contents($path);
     }
 
+    /**
+     * returns content of remote files
+     * @param  string $url url to file
+     * @return string      file-contents
+     */
     public static function getRemoteFileContents($url)
     {
         $ch = curl_init();
@@ -139,6 +198,12 @@ class Shopware_Plugins_Frontend_ScnSubresourceIntegrity_Bootstrap extends Shopwa
         return $data;
     }
 
+    /**
+     * returns integrity-value for a given file
+     * @param  array  $params smarty-paramaters
+     * @param  Smarty $smarty
+     * @return string integrity
+     */
     public static function smartyFunctionSri($params, $smarty)
     {
         $algorithm = 'sha384';
